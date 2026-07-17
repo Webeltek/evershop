@@ -13,6 +13,7 @@
     "build": "node ./packages/evershop/dist/bin/build/index.js",
     "build-fast": "evershop build -- --skip-minify",
     "setup": "evershop install",
+    "seed:all": "node ./packages/evershop/dist/bin/seed/index.js --all",
     "theme:active": "evershop theme:active",
     "theme:twizz": "evershop theme:twizz",
     "theme:create": "evershop theme:create",
@@ -55,6 +56,7 @@
   "dependencies": {
     "@types/react-slick": "^0.23.13",
     "@types/uuid": "^10.0.0",
+    "cors": "^2.8.5",
     "uuid": "^13.0.0"
   }
 }

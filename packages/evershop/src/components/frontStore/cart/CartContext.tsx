@@ -600,6 +600,7 @@ export const CartProvider = ({
         const response = await retry(() =>
           fetch(state.data!.addItemApi, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
@@ -650,7 +651,8 @@ export const CartProvider = ({
         // Server request with retry using item's remove API
         const response = await retry(() =>
           fetch(item.removeApi, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'include'
           })
         );
 
@@ -704,6 +706,7 @@ export const CartProvider = ({
         const response = await retry(() =>
           fetch(item.updateQtyApi, {
             method: 'PATCH',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })

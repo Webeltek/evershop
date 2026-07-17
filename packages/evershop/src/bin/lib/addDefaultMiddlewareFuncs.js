@@ -2,6 +2,7 @@ import path from 'path';
 import { select } from '@evershop/postgres-query-builder';
 import sessionStorage from 'connect-pg-simple';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import session from 'express-session';
 import pathToRegexp from 'path-to-regexp';
 import webpack from 'webpack';
@@ -29,6 +30,24 @@ import { getEnabledExtensions } from '../extension/index.js';
 import { findRoute } from './findRoute.js';
 
 export function addDefaultMiddlewareFuncs(app) {
+  // optional: read allowed origins from config
+  const allowedOrigins = getConfig('server.cors.allowedOrigins', [
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ]);
+
+  app.use(cors({
+    origin: (origin, callback) => {
+      // allow server-to-server requests (no origin) and matching origins
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true, // IMPORTANT for cookie-based auth
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token']
+  }));
+
   app.use((request, response, next) => {
     response.debugMiddlewares = [];
     next();

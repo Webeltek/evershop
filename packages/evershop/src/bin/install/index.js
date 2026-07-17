@@ -115,9 +115,14 @@ async function install() {
       pool = new Pool({ ...baseDBSetting, ssl: false });
       sslMode = 'disable';
     } else if (e.message.includes('certificate')) {
-      error(
-        `Looks like your database server does not have a valid SSL certificate. Please turn off the SSL option in the database configuration, restart the database server and try again.`
-      );
+      // error(
+      //   `Looks like your database server does not have a valid SSL certificate. Please turn off the SSL option in the database configuration, restart the database server and try again.`
+      // );
+      pool = new Pool({
+          ...baseDBSetting,
+          ssl: { rejectUnauthorized: false }
+      });
+      sslMode = 'allow';
     } else {
       error(e);
       process.exit(0);

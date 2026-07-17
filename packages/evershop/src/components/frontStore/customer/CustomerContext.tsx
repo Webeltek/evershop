@@ -347,6 +347,7 @@ export function CustomerProvider({
         const response = await retry(() =>
           fetch(loginAPI, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
           })
