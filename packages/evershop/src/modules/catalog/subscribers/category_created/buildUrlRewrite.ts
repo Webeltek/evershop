@@ -3,9 +3,9 @@ import {
   insertOnUpdate,
   select
 } from '@evershop/postgres-query-builder';
+import { EventSubscriber } from '../../../../lib/event/subscriber.js';
 import { error } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
-import { EventSubscriber } from '../../../../lib/event/subscriber.js';
 
 const buildUrlReWrite: EventSubscriber<'category_created'> = async (data) => {
   const categoryId = data.category_id;
@@ -45,7 +45,7 @@ const buildUrlReWrite: EventSubscriber<'category_created'> = async (data) => {
       path = `/${urlKey.url_key}${path}`;
     }
     // Insert the url rewrite rule to the url_rewrite table
-    await insertOnUpdate('url_rewrite', ['entity_uuid', 'language'])
+    await insertOnUpdate('url_rewrite', ['entity_uuid'])
       .given({
         entity_type: 'category',
         entity_uuid: categoryUuid,

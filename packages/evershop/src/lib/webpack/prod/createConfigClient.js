@@ -8,11 +8,13 @@ import { createBaseConfig } from '../createBaseConfig.js';
 import { getRouteBuildPath } from '../getRouteBuildPath.js';
 import { getRouteBuildSubPath } from '../getRouteBuildSubPath.js';
 import { isBuildRequired } from '../isBuildRequired.js';
-import { Tailwindcss } from '../plugins/Tailwindcss.js';
+import { InjectTailwindSources } from '../plugins/InjectTailwindSources.js';
+import { getTailwindSources } from '../util/getTailwindSources.js';
 
 export function createConfigClient(routes) {
   const extenions = getEnabledExtensions();
   const config = createBaseConfig(false);
+  const tailwindSources = getTailwindSources();
   const { plugins } = config;
   const entry = {};
   routes.forEach((route) => {
@@ -70,12 +72,12 @@ export function createConfigClient(routes) {
         publicPath: '/assets/'
       })
     );
-    plugins.push(new Tailwindcss(route));
+    //plugins.push(new Tailwindcss(route));
   });
 
   const loaders = config.module.rules;
   loaders.push({
-    test: /\.(css|scss)$/i,
+    test: /\.css$/i,
     use: [
       MiniCssExtractPlugin.loader,
       {
@@ -85,9 +87,46 @@ export function createConfigClient(routes) {
         }
       },
       {
+        loader: 'postcss-loader',
+        options: {
+          postcssOptions: {
+            plugins: [
+              InjectTailwindSources(tailwindSources),
+              '@tailwindcss/postcss',
+              'autoprefixer'
+            ]
+          }
+        }
+      }
+    ]
+  });
+
+  loaders.push({
+    test: /\.scss$/i,
+    use: [
+      MiniCssExtractPlugin.loader,
+      {
+        loader: 'css-loader',
+        options: {
+          url: false
+        }
+      },
+      {
+        loader: 'postcss-loader',
+        options: {
+          postcssOptions: {
+            plugins: [
+              InjectTailwindSources(tailwindSources),
+              '@tailwindcss/postcss',
+              'autoprefixer'
+            ]
+          }
+        }
+      },
+      {
         loader: 'sass-loader',
         options: {
-          sassOptions: { implementation: 'sass' },
+          implementation: 'sass',
           api: 'modern'
         }
       }
@@ -103,7 +142,11 @@ export function createConfigClient(routes) {
   );
 
   config.entry = entry;
-  config.output.filename = '[name]/client/[fullhash].js';
+  // Use per-asset [contenthash] (not [fullhash], which is one hash for the whole
+  // compilation and renames EVERY chunk on any source change — busting the
+  // 1-year immutable cache of the shared vendor/common chunks on every deploy).
+  // CSS already round-trips [contenthash] through HtmlWebpackPlugin → index.json.
+  config.output.filename = '[name]/client/[contenthash].js';
   config.name = 'Client';
 
   config.optimization = {

@@ -1,6 +1,6 @@
-import Button from '@components/common/Button.js';
 import { AddressSummary } from '@components/common/customer/address/AddressSummary.js';
 import { _ } from '@evershop/evershop/lib/locale/translate/_';
+import { Check } from 'lucide-react';
 import React from 'react';
 
 interface CustomerInfoProps {
@@ -9,6 +9,7 @@ interface CustomerInfoProps {
     customerFullName: string;
     customerEmail: string;
     paymentMethodName: string;
+    noShippingRequired: boolean;
     shippingAddress: {
       fullName: string;
       postcode: string;
@@ -40,7 +41,7 @@ interface CustomerInfoProps {
       city: string;
       address1: string;
       address2: string;
-    };
+    } | null; // zero-total orders don't collect a billing address
   };
 }
 
@@ -50,78 +51,72 @@ export default function CustomerInfo({
     customerFullName,
     customerEmail,
     paymentMethodName,
+    noShippingRequired,
     shippingAddress,
     billingAddress
   }
 }: CustomerInfoProps) {
   return (
     <div className="checkout-success-customer-info">
-      <h3 className="thank-you flex justify-start space-x-5">
-        <div className="check flex justify-center self-center text-interactive">
-          <svg
-            style={{ width: '3rem', height: '3rem' }}
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+      <div className="text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+          <Check className="h-8 w-8" strokeWidth={2.5} />
         </div>
-        <div className="self-center">
-          <span style={{ fontSize: '1.6rem', fontWeight: '300' }}>
-            {_('Order #${orderNumber}', { orderNumber })}
-          </span>
-          <div>
-            {_('Thank you ${name}!', {
-              name: customerFullName || billingAddress?.fullName
-            })}
-          </div>
-        </div>
-      </h3>
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+          {_('Thank you for your order!')}
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          {_('Order')}{' '}
+          <span className="font-medium text-foreground">#{orderNumber}</span>{' '}
+          {_('is confirmed. We’ve emailed a receipt to ${email}.', {
+            email: customerEmail
+          })}
+        </p>
+      </div>
 
-      <div className="customer-info mt-7 mb-5">
-        <div className="grid grid-cols-2 gap-7">
+      <div className="customer-info mt-8 rounded-lg border border-border p-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <div className="mb-2">
-              <h3>{_('Contact information')}</h3>
-            </div>
-            <div className="text-textSubdued">
+            <h3 className="mb-2 text-sm font-semibold">
+              {_('Contact information')}
+            </h3>
+            <div className="text-sm text-muted-foreground">
               {customerFullName || billingAddress?.fullName}
             </div>
-            <div className="text-textSubdued">{customerEmail}</div>
+            <div className="text-sm text-muted-foreground">{customerEmail}</div>
           </div>
           <div>
-            <div className="mb-2">
-              <h3>{_('Shipping Address')}</h3>
-            </div>
-            <div className="text-textSubdued">
-              <AddressSummary address={shippingAddress} />
+            <h3 className="mb-2 text-sm font-semibold">
+              {_('Shipping Address')}
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              {noShippingRequired ? (
+                _('No shipping required')
+              ) : (
+                <AddressSummary address={shippingAddress} />
+              )}
             </div>
           </div>
           <div>
-            <div className="mb-2">
-              <h3>{_('Payment Method')}</h3>
-            </div>
-            <div className="text-textSubdued">{paymentMethodName}</div>
-          </div>
-          <div>
-            <div className="mb-2">
-              <h3>{_('Billing Address')}</h3>
-            </div>
-            <div className="text-textSubdued">
-              <AddressSummary address={billingAddress} />
+            <h3 className="mb-2 text-sm font-semibold">
+              {_('Payment Method')}
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              {paymentMethodName}
             </div>
           </div>
+          {billingAddress && (
+            <div>
+              <h3 className="mb-2 text-sm font-semibold">
+                {_('Billing Address')}
+              </h3>
+              <div className="text-sm text-muted-foreground">
+                <AddressSummary address={billingAddress} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
-      <Button url="/" title={_('CONTINUE SHOPPING')} />
     </div>
   );
 }
@@ -138,6 +133,7 @@ export const query = `
       customerFullName
       customerEmail
       paymentMethodName
+      noShippingRequired
       shippingNote
       shippingAddress {
         fullName

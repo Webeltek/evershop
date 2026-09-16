@@ -10,10 +10,21 @@ export interface OgInfo {
   twitterSite: string;
   twitterCreator: string;
   twitterImage: string;
+  /** Article-type Open Graph fields (blog posts). */
+  publishedTime?: string;
+  authors?: string[];
+  tags?: string[];
 }
+
+export interface BreadcrumbItem {
+  url: string;
+  title: string;
+}
+
 export interface PageMetaInfo {
   route: {
     id: string;
+    isAdmin: boolean;
     path: string;
     params: Record<string, string>;
     url: string;
@@ -25,4 +36,6 @@ export interface PageMetaInfo {
   canonicalUrl: string;
   keywords: string[];
   baseUrl: string;
+  /** When set, the pageInfo.breadcrumbs resolver returns these verbatim. */
+  breadcrumbs?: BreadcrumbItem[];
 }

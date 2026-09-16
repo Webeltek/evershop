@@ -1,6 +1,17 @@
 /* eslint-disable react/prop-types */
 import { useAppDispatch } from '@components/common/context/app.js';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@components/common/ui/Select.js';
 import { _ } from '@evershop/evershop/lib/locale/translate/_';
+import { cn } from '@evershop/evershop/lib/util/cn';
+import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react';
 import React, { ReactNode, useCallback } from 'react';
 
 export interface SortOption {
@@ -35,16 +46,11 @@ interface ProductSortingProps {
   }) => ReactNode;
   className?: string;
   disabled?: boolean;
+  count: number;
 }
 
-const defaultSortOptions: SortOption[] = [
-  { code: '', name: _('Default'), label: _('Default') },
-  { code: 'price', name: _('Price'), label: _('Price') },
-  { code: 'name', name: _('Name'), label: _('Name') }
-];
-
 export function ProductSorting({
-  sortOptions = defaultSortOptions,
+  sortOptions,
   defaultSortBy = '',
   defaultSortOrder = 'asc',
   showSortDirection = true,
@@ -53,27 +59,36 @@ export function ProductSorting({
   renderSortSelect,
   renderSortDirection,
   className = '',
-  disabled = false
+  disabled = false,
+  count
 }: ProductSortingProps) {
   const AppContextDispatch = useAppDispatch();
 
-  const [sortBy, setSortBy] = React.useState<string>(() => {
-    // Check if this is browser or server
-    if (typeof window !== 'undefined') {
-      const params = new URL(document.location.href).searchParams;
-      return params.get('ob') || defaultSortBy;
-    }
-    return defaultSortBy;
-  });
+  // Compute default sort options at render time (not module scope) so `_()` uses
+  // the request/client-active dictionary. A module-scope `_()` freezes the
+  // translation at import time, which differs between the SSR bundle (imported
+  // before any request sets the locale) and the client (locale already loaded),
+  // producing a React 19 hydration text mismatch (and an untranslated SSR label).
+  const resolvedSortOptions: SortOption[] = sortOptions ?? [
+    { code: '', name: _('Default'), label: _('Default') },
+    { code: 'price', name: _('Price'), label: _('Price') },
+    { code: 'name', name: _('Name'), label: _('Name') }
+  ];
 
-  const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>(() => {
-    // Check if this is browser or server
-    if (typeof window !== 'undefined') {
-      const params = new URL(document.location.href).searchParams;
-      return (params.get('od') as 'asc' | 'desc') || defaultSortOrder;
-    }
-    return defaultSortOrder;
-  });
+  // Initialize to the defaults so the first client render matches the SSR output.
+  // Reading the URL during the initial render (via `typeof window`) makes the
+  // server (no window -> default) and client (window -> URL value) render
+  // different sort labels — a React 19 hydration mismatch on sorted deep-links
+  // (e.g. ?ob=price). The URL is applied after hydration in the effect below.
+  const [sortBy, setSortBy] = React.useState<string>(defaultSortBy);
+  const [sortOrder, setSortOrder] =
+    React.useState<'asc' | 'desc'>(defaultSortOrder);
+
+  React.useEffect(() => {
+    const params = new URL(window.location.href).searchParams;
+    setSortBy(params.get('ob') || defaultSortBy);
+    setSortOrder((params.get('od') as 'asc' | 'desc') || defaultSortOrder);
+  }, [defaultSortBy, defaultSortOrder]);
 
   const defaultSortChangeHandler = useCallback(
     async (newSortState: SortState) => {
@@ -130,22 +145,29 @@ export function ProductSorting({
     onChange: (value: string) => void;
     disabled?: boolean;
   }) => (
-    <select
-      className="form-control"
-      onChange={(e) => props.onChange(e.target.value)}
-      value={props.value}
+    <Select
+      value={props.options.find((option) => option.code === props.value)}
+      onValueChange={(value) => props.onChange(value?.code || '')}
       disabled={props.disabled}
     >
-      {props.options.map((option) => (
-        <option
-          key={option.code}
-          value={option.code}
-          disabled={option.disabled}
-        >
-          {option.label || option.name}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="h-8 w-auto gap-1.5 border-border bg-card text-sm">
+        <SelectValue placeholder={_('Select sort')} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>{_('Sort By')}</SelectLabel>
+          {props.options.map((option) => (
+            <SelectItem
+              key={option.code}
+              value={option}
+              disabled={option.disabled}
+            >
+              {option.label || option.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 
   const defaultSortDirection = (props: {
@@ -157,63 +179,35 @@ export function ProductSorting({
       type="button"
       onClick={props.onToggle}
       disabled={props.disabled}
-      className={`sort-direction-btn ${
+      className={`sort-direction-btn flex items-center justify-center ${
         props.disabled
           ? 'opacity-50 cursor-not-allowed'
-          : 'hover:text-blue-600 cursor-pointer'
+          : 'hover:text-primary cursor-pointer'
       }`}
       aria-label={`Sort ${
         props.sortOrder === 'asc' ? 'descending' : 'ascending'
       }`}
     >
       {props.sortOrder === 'desc' ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="feather feather-arrow-up"
-        >
-          <line x1="12" y1="19" x2="12" y2="5" />
-          <polyline points="5 12 12 5 19 12" />
-        </svg>
+        <ArrowDownWideNarrow className="w-5 h-5 text-muted-foreground" />
       ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="feather feather-arrow-down"
-        >
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <polyline points="19 12 12 19 5 12" />
-        </svg>
+        <ArrowUpWideNarrow className="w-5 h-5 text-muted-foreground" />
       )}
     </button>
   );
 
   const containerContent = (
     <>
-      <div style={{ width: '120px' }}>
+      <div className="sort-select">
         {renderSortSelect
           ? renderSortSelect({
-              options: sortOptions,
+              options: resolvedSortOptions,
               value: sortBy,
               onChange: onChangeSort,
               disabled
             })
           : defaultSortSelect({
-              options: sortOptions,
+              options: resolvedSortOptions,
               value: sortBy,
               onChange: onChangeSort,
               disabled
@@ -238,6 +232,22 @@ export function ProductSorting({
   );
 
   return (
-    <div className={`product-sorting ${className}`}>{containerContent}</div>
+    <div className="mb-8 flex items-center justify-between">
+      <div className="text-sm text-muted-foreground">
+        {_('${count} products', {
+          count: count.toString()
+        })}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 text-sm text-muted-foreground">
+          {_('Sort by')}
+        </span>
+        <div
+          className={cn(`product-sorting flex items-center gap-2`, className)}
+        >
+          {containerContent}
+        </div>
+      </div>
+    </div>
   );
 }

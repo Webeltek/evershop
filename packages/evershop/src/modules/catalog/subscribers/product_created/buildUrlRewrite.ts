@@ -1,7 +1,7 @@
 import { insertOnUpdate, select } from '@evershop/postgres-query-builder';
+import { EventSubscriber } from '../../../../lib/event/subscriber.js';
 import { error } from '../../../../lib/log/logger.js';
 import { pool } from '../../../../lib/postgres/connection.js';
-import { EventSubscriber } from '../../../../lib/event/subscriber.js';
 
 const buildUrlRewrite: EventSubscriber<'product_created'> = async (data) => {
   try {
@@ -17,7 +17,7 @@ const buildUrlRewrite: EventSubscriber<'product_created'> = async (data) => {
       return;
     }
     // Insert a new url rewrite for the product itself
-    await insertOnUpdate('url_rewrite', ['entity_uuid', 'language'])
+    await insertOnUpdate('url_rewrite', ['entity_uuid'])
       .given({
         entity_type: 'product',
         entity_uuid: productUuid,
@@ -47,7 +47,7 @@ const buildUrlRewrite: EventSubscriber<'product_created'> = async (data) => {
       // Wait for the category event to be fired and create the url rewrite for product
       return;
     } else {
-      await insertOnUpdate('url_rewrite', ['entity_uuid', 'language'])
+      await insertOnUpdate('url_rewrite', ['entity_uuid'])
         .given({
           entity_type: 'product',
           entity_uuid: productUuid,
