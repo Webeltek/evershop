@@ -284,7 +284,7 @@ export default (context: { command?: string } = {}) => {
       scripts: [],
       bases: []
     },
-    copyRight: `© 2022 Evershop. All Rights Reserved.`
+    copyRight: `© 2026 Webeltek. All Rights Reserved.`
   };
   config.util.setModuleDefaults('themeConfig', defaultThemeConfig);
 

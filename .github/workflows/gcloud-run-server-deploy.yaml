@@ -1,0 +1,61 @@
+# build docker public image, push to docker hub, deploy to google cloud run
+name: Deploy to Google Cloud Run from Docker Hub
+
+on:
+  push:
+    branches:
+      - main  # or any branch you want
+    # paths: 
+    #   - 'server/**'  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and Push Docker image to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/repo24:evershop
+
+      - name: Set up Google Cloud auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: evershop-server-service
+          region: europe-west4
+          image: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/repo24:evershop
+          env_vars: |
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ vars.DB_PORT }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_SSLMODE=${{ vars.DB_SSLMODE }}
+            EVERSHOP_HOME_URL=${{ vars.EVERSHOP_HOME_URL }}
+            NODE_ENV=production
+          flags: >
+            --min-instances 0
+            --max-instances 1
+            --port 3100
+            --allow-unauthenticated
+            --verbosity=debug
+            --update-secrets GCP_SERVICE_ACCOUNT_KEY=gcp-service-account-key:latest

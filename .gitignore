@@ -1,5 +1,6 @@
 node_modules
 .env
+.env_initial_test
 dist
 !packages/create-evershop-app/sample/extensions/sample/dist
 !packages/create-evershop-app/sample/themes/sample/dist
