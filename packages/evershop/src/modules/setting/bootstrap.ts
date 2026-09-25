@@ -1,7 +1,11 @@
 import { debug, error } from '../../lib/log/logger.js';
 import { refreshSetting } from './services/setting.js';
 
-export default async () => {
+export default async (context: { command?: string } = {}) => {
+  if (context.command === 'build') {
+    return;
+  }
+
   // Warm the in-memory setting cache so the synchronous accessors (`getSettingSync` and the
   // `*Sync` getters) are reliable from the first request onward — the pricing formatter,
   // email Handlebars helpers and metafield schema builders all read settings synchronously.
