@@ -1,3 +1,5 @@
+# Ignore the specific Firebase key file in your extension
+extensions/firebase_email_verifier/tv-store-2025-firebase-key.json
 node_modules
 .env
 .env_initial_test

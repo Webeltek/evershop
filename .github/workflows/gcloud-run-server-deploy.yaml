@@ -51,6 +51,8 @@ jobs:
             DB_NAME=${{ secrets.DB_NAME }}
             DB_SSLMODE=${{ vars.DB_SSLMODE }}
             EVERSHOP_HOME_URL=${{ vars.EVERSHOP_HOME_URL }}
+            VITE_FIREBASE_WEB_API_KEY=${{ secrets.VITE_FIREBASE_WEB_API_KEY }}
+            FIREBASE_ADMIN_SDK_KEY=${{ secrets.FIREBASE_ADMIN_SDK_KEY }}
             NODE_ENV=production
           flags: >
             --min-instances 0

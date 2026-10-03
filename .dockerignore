@@ -12,6 +12,9 @@ node_modules
 packages/*/dist
 .evershop
 
+# Ignore the specific file path for the firebase sdk key json file in the extension
+extensions/firebase_email_verifier/tv-store-2025-firebase-key.json
+
 # VCS and hooks. .git must stay out (HUSKY=0 in the Dockerfile covers the
 # prepare hook that would otherwise fail without it).
 .git
